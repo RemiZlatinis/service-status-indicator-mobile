@@ -1,30 +1,38 @@
 {
   "expo": {
-    "name": "service-status-indicator-mobile",
-    "slug": "service-status-indicator-mobile",
+    "name": "Service Status Indicator",
+    "slug": "service-status-indicator",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#1A202C"
     },
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.remizlatinis.servicestatusindicator"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      }
+        "backgroundColor": "#1A202C"
+      },
+      "package": "com.remizlatinis.servicestatusindicator"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "63ff56e3-3623-448d-ab7e-9ba195ae45f9"
+      }
+    },
+    "owner": "remizlatinis"
   }
 }
