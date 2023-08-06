@@ -1,12 +1,19 @@
 import { useEffect, useState } from "react";
 import { Button, StyleSheet, Text, TextInput, View } from "react-native";
+import { BarCodeScanner, getPermissionsAsync } from "expo-barcode-scanner";
 
 import { SafeScreen } from "../components/common";
 import { get, save } from "../utils/settingsStorage";
+import { updateAPISettings } from "../api";
 
 function SettingsScreen() {
   const [url, setUrl] = useState<string>();
   const [token, setToken] = useState<string>();
+  const [scanned, setScanned] = useState(true);
+
+  useEffect(() => {
+    getPermissionsAsync();
+  }, []);
 
   useEffect(() => {
     const readSettings = async () => {
@@ -20,7 +27,21 @@ function SettingsScreen() {
   const handleSave = () => {
     save("url", url || "");
     save("token", token || "");
+    updateAPISettings({ token, url });
   };
+
+  const handleBarCodeScanned = ({ type, data }: any) => {
+    setScanned(true);
+    setToken(data);
+  };
+
+  if (!scanned)
+    return (
+      <BarCodeScanner
+        onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
+        style={StyleSheet.absoluteFillObject}
+      />
+    );
 
   return (
     <SafeScreen style={styles.screen}>
@@ -32,7 +53,16 @@ function SettingsScreen() {
         value={url}
         onChangeText={setUrl}
       />
-      <Text style={styles.label}>TOKEN</Text>
+      <View style={styles.tokenContainer}>
+        <Text style={styles.label}>TOKEN</Text>
+        <View style={[styles.buttonContainer, styles.scanButton]}>
+          <Button
+            title={"Tap to Scan QR Token"}
+            onPress={() => setScanned(false)}
+            color="#718096"
+          />
+        </View>
+      </View>
       <TextInput
         secureTextEntry
         style={styles.input}
@@ -40,19 +70,24 @@ function SettingsScreen() {
         onChangeText={setToken}
       />
       <View style={styles.buttonContainer}>
-        <Button title="save" onPress={handleSave} />
+        <Button title="save" onPress={handleSave} color="#718096" />
       </View>
     </SafeScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { margin: 20 },
-  label: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
+  screen: { flex: 1, padding: 20, backgroundColor: "#1A202C" },
+  label: {
+    color: "#E2E8F0",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
   input: {
     marginBottom: 20,
+    marginTop: 10,
     fontSize: 18,
-    backgroundColor: "lightgrey",
+    backgroundColor: "#CBD5E0",
     paddingHorizontal: 10,
     paddingVertical: 3,
     borderRadius: 30,
@@ -60,6 +95,13 @@ const styles = StyleSheet.create({
   buttonContainer: {
     overflow: "hidden",
     borderRadius: 30,
+  },
+  scanButton: {
+    marginLeft: "auto",
+  },
+  tokenContainer: {
+    flexDirection: "row",
+    alignItems: "baseline",
   },
 });
 
