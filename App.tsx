@@ -6,6 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { ServicesScreen, SettingsScreen } from "./screens";
 import { registerBackgroundRefreshTaskAsync } from "./tasks/backgroundRefreshTask";
 import { useServices } from "./hooks";
+import { isFirstLaunch } from "./utils";
 
 const logoOk = require("./assets/status/server-ok.png");
 const logoError = require("./assets/status/server-error.png");
@@ -14,8 +15,22 @@ export default function App() {
   const [settingsMode, setSettingsMode] = useState(false);
   const { serverDisconnected } = useServices();
 
+  const initialize = async () => {
+    if (await isFirstLaunch())
+      Alert.alert(
+        "Recommended actions (Manually)",
+        "- Enable Autostart permissions\n- Disable battery optimizations (This enables background notification)"
+      );
+
+    try {
+      await registerBackgroundRefreshTask();
+    } catch (error) {
+      Alert.alert("Error on task registering", (error as Error).message);
+    }
+  };
+
   useEffect(() => {
-    registerBackgroundRefreshTaskAsync();
+    initialize();
   }, []);
 
   return (
