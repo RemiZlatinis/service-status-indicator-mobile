@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { Button, StyleSheet, Text, TextInput, View } from "react-native";
-import { BarCodeScanner, getPermissionsAsync } from "expo-barcode-scanner";
+import {
+  BarCodeScanner,
+  getPermissionsAsync,
+  requestPermissionsAsync,
+} from "expo-barcode-scanner";
 
 import { SafeScreen } from "../components/common";
 import { get, save } from "../utils/settingsStorage";
@@ -11,8 +15,13 @@ function SettingsScreen() {
   const [token, setToken] = useState<string>();
   const [scanned, setScanned] = useState(true);
 
+  const requestPermissions = async () => {
+    const { granted } = await getPermissionsAsync();
+    if (!granted) await requestPermissionsAsync();
+  };
+
   useEffect(() => {
-    getPermissionsAsync();
+    requestPermissions();
   }, []);
 
   useEffect(() => {
