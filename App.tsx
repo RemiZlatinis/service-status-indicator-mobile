@@ -7,6 +7,7 @@ import { ServicesScreen, SettingsScreen } from "./screens";
 import { useServices } from "./hooks";
 import { registerBackgroundRefreshTask } from "./tasks/backgroundRefreshTask";
 import { isFirstLaunch } from "./utils";
+import { initializeNotifications } from "./utils/notifications";
 
 const server = require("./assets/status/server.png");
 const serverOk = require("./assets/status/server-ok.png");
@@ -22,6 +23,8 @@ export default function App() {
         "Recommended actions (Manually)",
         "- Enable Autostart permissions\n- Disable battery optimizations (This enables background notification)"
       );
+
+    initializeNotifications();
 
     try {
       await registerBackgroundRefreshTask();
