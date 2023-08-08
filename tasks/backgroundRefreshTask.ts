@@ -4,6 +4,7 @@ import NetInfo from "@react-native-community/netinfo";
 
 import { notify } from "../utils/notifications";
 import { getServices } from "../api";
+import { isServerSet } from "../utils/settingsStorage";
 
 export const TASK_NAME = "background-refresh";
 
@@ -12,7 +13,7 @@ let status: "error" | "failure" | "warning" | "update" | "ok" = "ok"
 TaskManager.defineTask(TASK_NAME, async () => {
   const { isInternetReachable } = await NetInfo.fetch()
 
-  if (!isInternetReachable)
+  if (!isInternetReachable || !await isServerSet())
     return BackgroundFetch.BackgroundFetchResult.NoData
 
   try {
@@ -51,7 +52,7 @@ TaskManager.defineTask(TASK_NAME, async () => {
   }
 });
 
-export async function registerBackgroundRefreshTaskAsync() {
+export async function registerBackgroundRefreshTask() {
   return BackgroundFetch.registerTaskAsync(TASK_NAME, {
     minimumInterval: 1 * 60,
     stopOnTerminate: false,
@@ -59,6 +60,10 @@ export async function registerBackgroundRefreshTaskAsync() {
   });
 }
 
-export async function unregisterBackgroundRefreshTaskAsync() {
+export async function unregisterBackgroundRefreshTask() {
   return BackgroundFetch.unregisterTaskAsync(TASK_NAME);
+}
+
+export async function isBackgroundRefreshRegistered() {
+  return TaskManager.isTaskRegisteredAsync(TASK_NAME);
 }

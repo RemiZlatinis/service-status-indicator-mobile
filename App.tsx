@@ -1,15 +1,16 @@
-import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
-import { Image, StyleSheet, View } from "react-native";
+import { Alert, Image, StyleSheet, Text, View } from "react-native";
+import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
 
 import { ServicesScreen, SettingsScreen } from "./screens";
-import { registerBackgroundRefreshTaskAsync } from "./tasks/backgroundRefreshTask";
 import { useServices } from "./hooks";
+import { registerBackgroundRefreshTask } from "./tasks/backgroundRefreshTask";
 import { isFirstLaunch } from "./utils";
 
-const logoOk = require("./assets/status/server-ok.png");
-const logoError = require("./assets/status/server-error.png");
+const server = require("./assets/status/server.png");
+const serverOk = require("./assets/status/server-ok.png");
+const serverError = require("./assets/status/server-error.png");
 
 export default function App() {
   const [settingsMode, setSettingsMode] = useState(false);
@@ -39,9 +40,18 @@ export default function App() {
         <StatusBar />
         <Image
           style={styles.statusLogo}
-          source={serverDisconnected ? logoError : logoOk}
+          source={
+            serverDisconnected === undefined
+              ? server
+              : serverDisconnected
+              ? serverError
+              : serverOk
+          }
           resizeMode="contain"
         />
+        {serverDisconnected === undefined && (
+          <Text style={{ marginRight: "auto" }}>No configured server</Text>
+        )}
         <Ionicons
           name={settingsMode ? "close-circle" : "settings"}
           size={30}

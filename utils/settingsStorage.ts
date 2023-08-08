@@ -9,3 +9,7 @@ export async function save(key: keyof Settings, value: string) {
 export async function get(key: keyof Settings) {
   return SecureStore.getItemAsync(key);
 }
+
+export async function isServerSet() {
+  return await get("url") && await get("token")
+}
