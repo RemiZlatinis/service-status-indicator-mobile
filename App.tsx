@@ -15,7 +15,7 @@ const serverError = require("./assets/status/server-error.png");
 
 export default function App() {
   const [settingsMode, setSettingsMode] = useState(false);
-  const { serverDisconnected } = useServices();
+  const { services, loading, serverDisconnected } = useServices();
 
   const initialize = async () => {
     if (await isFirstLaunch())
@@ -62,7 +62,11 @@ export default function App() {
           onPress={() => setSettingsMode(!settingsMode)}
         />
       </View>
-      {settingsMode ? <SettingsScreen /> : <ServicesScreen />}
+      {settingsMode ? (
+        <SettingsScreen />
+      ) : (
+        <ServicesScreen services={services} loading={loading} />
+      )}
     </View>
   );
 }

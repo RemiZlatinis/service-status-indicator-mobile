@@ -1,14 +1,26 @@
-import { StyleSheet } from "react-native";
+import { ActivityIndicator, StyleSheet } from "react-native";
+
 import { SafeScreen } from "../components/common";
 import ServicesList from "../components/services/ServicesList";
-import { useServices } from "../hooks";
+import { Service } from "../models";
 
-function ServicesScreen() {
-  const { services } = useServices();
+interface Props {
+  services: Service[];
+  loading: boolean;
+}
 
+function ServicesScreen({ services, loading }: Props) {
   return (
     <SafeScreen style={styles.screen}>
-      <ServicesList services={services} />
+      {loading && services.length === 0 ? (
+        <ActivityIndicator
+          size="large"
+          color="#4A5568"
+          style={styles.indicator}
+        />
+      ) : (
+        <ServicesList services={services} />
+      )}
     </SafeScreen>
   );
 }
@@ -18,6 +30,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#1A202C",
   },
+  indicator: { flex: 1 },
 });
 
 export default ServicesScreen;

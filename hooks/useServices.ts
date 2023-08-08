@@ -6,7 +6,7 @@ import { isServerSet } from '../utils/settingsStorage';
 
 function useServices() {
   const [services, setServices] = useState<Service[]>([]);
-  const [lastUpdate, setLastUpdate] = useState<number>()
+  const [loading, setLoading] = useState(false);
   const [serverDisconnected, setServerDisconnected] = useState<boolean>()
 
   useEffect(() => {
@@ -14,12 +14,14 @@ function useServices() {
       if (!await isServerSet()) return setServerDisconnected(undefined);
 
       try {
+        setLoading(true);
         setServices(await getServices());
-        setLastUpdate(Date.now())
         setServerDisconnected(false)
       } catch (error) {
         setServerDisconnected(true)
         setServices([])
+      } finally {
+        setLoading(false)
       }
     };
 
@@ -30,7 +32,7 @@ function useServices() {
     return () => clearInterval(interval);
   }, []);
 
-  return { services, lastUpdate, serverDisconnected }
+  return { services, loading, serverDisconnected }
 }
 
 export default useServices;
