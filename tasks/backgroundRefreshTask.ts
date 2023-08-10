@@ -1,14 +1,27 @@
 import * as BackgroundFetch from "expo-background-fetch";
 import * as TaskManager from "expo-task-manager";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from "@react-native-community/netinfo";
 
 import { notify } from "../utils/notifications";
 import { getServices } from "../api";
 import { isServerSet } from "../utils/settingsStorage";
 
-export const TASK_NAME = "background-refresh";
+const TASK_NAME = "background-refresh";
+const STATUS_STORAGE_KEY = "status";
 
-let status: "error" | "failure" | "warning" | "update" | "ok" = "ok"
+type Status = "error" | "failure" | "warning" | "update" | "ok"
+
+async function getStatus() {
+  const status = await AsyncStorage.getItem(STATUS_STORAGE_KEY)
+  if (status)
+    return status as Status
+  else return "ok"
+}
+
+async function setStatus(status: Status) {
+  await AsyncStorage.setItem(STATUS_STORAGE_KEY, status)
+}
 
 TaskManager.defineTask(TASK_NAME, async () => {
   const { isInternetReachable } = await NetInfo.fetch()
@@ -20,33 +33,33 @@ TaskManager.defineTask(TASK_NAME, async () => {
     const services = await getServices();
 
     if (JSON.stringify(services).includes("update")) {
-      if (status != "update") {
+      if (await getStatus() != "update") {
         notify("Update", "There are some updates available on your server.");
-        status = "update"
+        setStatus("update")
       }
     }
     else if (JSON.stringify(services).includes("warning")) {
-      if (status != "warning") {
+      if (await getStatus() != "warning") {
         notify("Warning!", "Something needs attention on your server.");
-        status = "warning"
+        setStatus("warning")
       }
     }
     else if (JSON.stringify(services).includes("failure")) {
-      if (status != "failure") {
+      if (await getStatus() != "failure") {
         notify("Failure!", "There is a critical failure on your server.");
-        status = "failure"
+        setStatus("failure")
       }
     }
-    else if (status != "ok") {
+    else if (await getStatus() != "ok") {
       notify("All good", "Your server is up-to-date and all services are running.");
-      status = "ok"
+      setStatus("ok")
     }
 
     return BackgroundFetch.BackgroundFetchResult.NewData;
   } catch (error) {
-    if (status != "error") {
+    if (await getStatus() != "error") {
       notify("Connection lost!", "Your server is unreachable.");
-      status = "error"
+      setStatus("error")
     }
     return BackgroundFetch.BackgroundFetchResult.Failed;
   }
