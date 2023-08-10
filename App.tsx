@@ -2,12 +2,16 @@ import { useEffect, useState } from "react";
 import { Alert, Image, StyleSheet, Text, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { Ionicons } from "@expo/vector-icons";
+import * as SplashScreen from "expo-splash-screen";
 
 import { ServicesScreen, SettingsScreen } from "./screens";
 import { useServices } from "./hooks";
 import { registerBackgroundRefreshTask } from "./tasks/backgroundRefreshTask";
 import { isFirstLaunch } from "./utils";
 import { initializeNotifications } from "./utils/notifications";
+import { isServerSet } from "./utils/settingsStorage";
+
+SplashScreen.preventAutoHideAsync();
 
 const server = require("./assets/status/server.png");
 const serverOk = require("./assets/status/server-ok.png");
@@ -33,9 +37,18 @@ export default function App() {
     }
   };
 
+  const handleSplashScreen = async () => {
+    if (!(await isServerSet()) || serverDisconnected !== undefined)
+      SplashScreen.hideAsync();
+  };
+
   useEffect(() => {
     initialize();
   }, []);
+
+  useEffect(() => {
+    handleSplashScreen();
+  }, [serverDisconnected]);
 
   return (
     <View style={styles.screen}>
