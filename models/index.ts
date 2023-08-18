@@ -3,7 +3,11 @@ export interface Settings {
   token: string;
 }
 
+export type ServiceStatus = "ok" | "update" | "warning" | "failure"
+
 export interface Service {
+  id: string;
   label: string;
-  status: "ok" | "update" | "warning" | "failure"
+  status: ServiceStatus
+  message: string | null
 }

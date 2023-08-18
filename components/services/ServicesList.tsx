@@ -14,7 +14,7 @@ function ServicesList({ services }: Props) {
         <ServiceCard
           style={styles.cardContainer}
           service={service}
-          key={service.label}
+          key={service.id}
         />
       ))}
     </View>

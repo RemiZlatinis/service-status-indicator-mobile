@@ -6,60 +6,52 @@ import NetInfo from "@react-native-community/netinfo";
 import { notify } from "../utils/notifications";
 import { getServices } from "../api";
 import { isServerSet } from "../utils/settingsStorage";
+import { Service } from "../models";
 
 const TASK_NAME = "background-refresh";
-const STATUS_STORAGE_KEY = "status";
+const LAST_SERVICE_UPDATE_KEY = "service-last-update";
+const NOTIFIED_FOR_OFFLINE_KEY = "server-offline";
 
-type Status = "error" | "failure" | "warning" | "update" | "ok"
 
-async function getStatus() {
-  const status = await AsyncStorage.getItem(STATUS_STORAGE_KEY)
-  if (status)
-    return status as Status
-  else return "ok"
+async function hasNotifiedForOffline() {
+  return AsyncStorage.getItem(NOTIFIED_FOR_OFFLINE_KEY)
 }
 
-async function setStatus(status: Status) {
-  await AsyncStorage.setItem(STATUS_STORAGE_KEY, status)
+async function setNotifiedForOffline() {
+  await AsyncStorage.setItem(NOTIFIED_FOR_OFFLINE_KEY, "true")
+}
+
+async function getServiceLastUpdate(id: string) {
+  const service = await AsyncStorage.getItem(LAST_SERVICE_UPDATE_KEY + id)
+  if (service)
+    return JSON.parse(service) as Service
+}
+
+async function setServiceLastUpdate(service: Service) {
+  await AsyncStorage.setItem(LAST_SERVICE_UPDATE_KEY + service.id, JSON.stringify(service))
 }
 
 TaskManager.defineTask(TASK_NAME, async () => {
+  // Do nothing if no Internet or no Server configured.  
   const { isInternetReachable } = await NetInfo.fetch()
-
   if (!isInternetReachable || !await isServerSet())
     return BackgroundFetch.BackgroundFetchResult.NoData
 
   try {
     const services = await getServices();
 
-    if (JSON.stringify(services).includes("update")) {
-      if (await getStatus() != "update") {
-        notify("Update", "There are some updates available on your server.");
-        setStatus("update")
-      }
-    }
-    else if (JSON.stringify(services).includes("warning")) {
-      if (await getStatus() != "warning") {
-        notify("Warning!", "Something needs attention on your server.");
-        setStatus("warning")
-      }
-    }
-    else if (JSON.stringify(services).includes("failure")) {
-      if (await getStatus() != "failure") {
-        notify("Failure!", "There is a critical failure on your server.");
-        setStatus("failure")
-      }
-    }
-    else if (await getStatus() != "ok") {
-      notify("All good", "Your server is up-to-date and all services are running.");
-      setStatus("ok")
+    for (const service of services) {
+      const last_update = await getServiceLastUpdate(service.id)
+      if (last_update?.status !== service.status || last_update.message !== service.message)
+        notify(`${service.label}: ${service.status}`, service.message || "");
+      setServiceLastUpdate(service)
+      return BackgroundFetch.BackgroundFetchResult.NewData;
     }
 
-    return BackgroundFetch.BackgroundFetchResult.NewData;
   } catch (error) {
-    if (await getStatus() != "error") {
-      notify("Connection lost!", "Your server is unreachable.");
-      setStatus("error")
+    if (!await hasNotifiedForOffline()) {
+      notify("Server unreachable.", "Whether the server or the API is not responding, check your server.");
+      setNotifiedForOffline()
     }
     return BackgroundFetch.BackgroundFetchResult.Failed;
   }

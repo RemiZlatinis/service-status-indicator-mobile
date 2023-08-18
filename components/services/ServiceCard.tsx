@@ -17,14 +17,19 @@ function ServiceCard({ service, ...props }: Props) {
   return (
     <View {...props} style={[styles.container, props.style]}>
       <Image style={styles.image} source={statusImage[service.status]} />
-      <Text style={styles.label}>{service.label}</Text>
+      <View style={styles.textContainer}>
+        <Text style={styles.label}>{service.label}</Text>
+        {service.message && (
+          <Text style={styles.message}>{service.message}</Text>
+        )}
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    height: 50,
+    height: 60,
     width: "100%",
     backgroundColor: "#4A5568",
     borderRadius: 10,
@@ -36,10 +41,16 @@ const styles = StyleSheet.create({
     height: 30,
     width: 30,
   },
+  textContainer: {
+    paddingHorizontal: 10,
+  },
   label: {
     color: "#E2E8F0",
     fontSize: 20,
-    paddingHorizontal: 10,
+  },
+  message: {
+    color: "#A0AEC0",
+    fontSize: 14,
   },
 });
 
