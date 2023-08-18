@@ -1,10 +1,17 @@
 import { useEffect, useState } from "react";
-import { Button, StyleSheet, Text, TextInput, View } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import {
   BarCodeScanner,
   getPermissionsAsync,
   requestPermissionsAsync,
 } from "expo-barcode-scanner";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 import { SafeScreen } from "../components/common";
 import { get, save } from "../utils/settingsStorage";
@@ -39,21 +46,41 @@ function SettingsScreen() {
     updateAPISettings({ token, url });
   };
 
-  const handleBarCodeScanned = ({ type, data }: any) => {
+  const handleBarCodeScanned = ({ data }: { data: string }) => {
+    setUrl(data.substring(data.indexOf("{'") + 2, data.indexOf("',")));
+    setToken(data.substring(data.indexOf(" '") + 2, data.indexOf("'}")));
     setScanned(true);
-    setToken(data);
   };
-
-  if (!scanned)
-    return (
-      <BarCodeScanner
-        onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
-        style={StyleSheet.absoluteFillObject}
-      />
-    );
 
   return (
     <SafeScreen style={styles.screen}>
+      {!scanned && (
+        <View style={styles.scanScreen}>
+          <View style={styles.scannerContainer}>
+            <BarCodeScanner
+              style={styles.scanner}
+              onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
+            />
+          </View>
+        </View>
+      )}
+
+      {/* QR Button */}
+      <View style={styles.qrContainer}>
+        <Text style={styles.label}>{scanned ? "Scan" : "Cancel"}</Text>
+        <TouchableOpacity
+          style={styles.qrButtonContainer}
+          onPress={() => setScanned(!scanned)}
+        >
+          <MaterialCommunityIcons
+            name={scanned ? "qrcode-scan" : "window-close"}
+            size={35}
+            color="#E2E8F0"
+          />
+        </TouchableOpacity>
+      </View>
+
+      {/* Settings Form */}
       <Text style={styles.label}>API URL</Text>
       <TextInput
         textContentType="URL"
@@ -62,55 +89,79 @@ function SettingsScreen() {
         value={url}
         onChangeText={setUrl}
       />
-      <View style={styles.tokenContainer}>
-        <Text style={styles.label}>TOKEN</Text>
-        <View style={[styles.buttonContainer, styles.scanButton]}>
-          <Button
-            title={"Tap to Scan QR Token"}
-            onPress={() => setScanned(false)}
-            color="#718096"
-          />
-        </View>
-      </View>
+      <Text style={styles.label}>TOKEN</Text>
       <TextInput
         secureTextEntry
         style={styles.input}
         value={token}
         onChangeText={setToken}
       />
-      <View style={styles.buttonContainer}>
-        <Button title="save" onPress={handleSave} color="#718096" />
+      <View>
+        <TouchableOpacity style={styles.buttonContainer} onPress={handleSave}>
+          <Text style={styles.label}>SAVE</Text>
+        </TouchableOpacity>
       </View>
     </SafeScreen>
   );
 }
 
 const styles = StyleSheet.create({
+  scanScreen: {
+    width: "100%",
+    position: "absolute",
+    overflow: "hidden",
+    zIndex: 1,
+    top: 20,
+    alignSelf: "center",
+    backgroundColor: "#1A202C",
+  },
+  scanner: {
+    transform: [{ scale: 1.8 }], // Zoom at least 16:9
+    aspectRatio: 1,
+  },
+  scannerContainer: {
+    overflow: "hidden",
+    borderRadius: 30,
+  },
   screen: { flex: 1, padding: 20, backgroundColor: "#1A202C" },
   label: {
     color: "#E2E8F0",
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
   },
   input: {
     marginBottom: 20,
     marginTop: 10,
-    fontSize: 18,
+    fontSize: 20,
     backgroundColor: "#CBD5E0",
     paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 30,
+    paddingVertical: 10,
+    borderRadius: 40,
   },
   buttonContainer: {
+    fontSize: 20,
     overflow: "hidden",
     borderRadius: 30,
+    height: 50,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#718096",
   },
   scanButton: {
     marginLeft: "auto",
   },
-  tokenContainer: {
+  qrContainer: {
     flexDirection: "row",
-    alignItems: "baseline",
+    alignItems: "center",
+    position: "absolute",
+    bottom: 30,
+    right: 20,
+  },
+  qrButtonContainer: {
+    backgroundColor: "#4A5568",
+    padding: 15,
+    borderRadius: 50,
+    marginLeft: 10,
   },
 });
 
