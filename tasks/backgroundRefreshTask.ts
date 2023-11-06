@@ -23,8 +23,7 @@ async function setNotifiedForOffline() {
 
 async function getServiceLastUpdate(id: string) {
   const service = await AsyncStorage.getItem(LAST_SERVICE_UPDATE_KEY + id)
-  if (service)
-    return JSON.parse(service) as Service
+  if (service) return JSON.parse(service) as Service
 }
 
 async function setServiceLastUpdate(service: Service) {
@@ -32,6 +31,8 @@ async function setServiceLastUpdate(service: Service) {
 }
 
 TaskManager.defineTask(TASK_NAME, async () => {
+  console.log(await AsyncStorage.getAllKeys());
+
   // Do nothing if no Internet or no Server configured.  
   const { isInternetReachable } = await NetInfo.fetch()
   if (!isInternetReachable || !await isServerSet())
@@ -40,13 +41,20 @@ TaskManager.defineTask(TASK_NAME, async () => {
   try {
     const services = await getServices();
 
-    for (const service of services) {
+    services.forEach(async service => {
       const last_update = await getServiceLastUpdate(service.id)
-      if (last_update?.status !== service.status || last_update.message !== service.message)
-        notify(`${service.label}: ${service.status}`, service.message || "");
-      setServiceLastUpdate(service)
-      return BackgroundFetch.BackgroundFetchResult.NewData;
-    }
+
+      if ((last_update?.status !== service.status) || (last_update.message !== service.message)) {
+        console.log(`Status or message change of: ${service.label}`);
+
+        await notify(`${service.label}: ${service.status}`, service.message || "");
+        await setServiceLastUpdate(service)
+        return BackgroundFetch.BackgroundFetchResult.NewData;
+      }
+      console.log(`Nothing change of: ${service.label}`);
+      await setServiceLastUpdate(service)
+      return BackgroundFetch.BackgroundFetchResult.NoData;
+    })
 
   } catch (error) {
     if (!await hasNotifiedForOffline()) {

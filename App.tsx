@@ -6,7 +6,7 @@ import * as SplashScreen from "expo-splash-screen";
 
 import { ServicesScreen, SettingsScreen } from "./screens";
 import { useServices } from "./hooks";
-import { registerBackgroundRefreshTask } from "./tasks/backgroundRefreshTask";
+import { registerBackgroundRefreshTask, unregisterBackgroundRefreshTask } from "./tasks/backgroundRefreshTask";
 import { isFirstLaunch } from "./utils";
 import { initializeNotifications } from "./utils/notifications";
 import { isServerSet } from "./utils/settingsStorage";
@@ -28,9 +28,10 @@ export default function App() {
         "- Enable Autostart permissions\n- Disable battery optimizations (This enables background notification)"
       );
 
-    initializeNotifications();
+    await initializeNotifications();
 
     try {
+      await unregisterBackgroundRefreshTask();
       await registerBackgroundRefreshTask();
     } catch (error) {
       Alert.alert("Error on task registering", (error as Error).message);
